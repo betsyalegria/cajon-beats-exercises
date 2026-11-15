@@ -41,14 +41,18 @@ button.primary{background:var(--text);color:var(--bg);border-color:var(--text)}
 .dot{width:10px;height:10px;border-radius:50%;display:inline-block}
 .op{color:var(--muted);font-weight:600}
 .total{font-weight:600}
-.ar{display:grid;grid-template-columns:70px minmax(0,1fr);gap:8px;align-items:center;padding:8px 10px;border-radius:10px;margin-top:8px;background:var(--soft)}
+.ar{padding:10px 12px;border-radius:10px;margin-top:8px;background:var(--soft)}
+.hd{font-size:14px;line-height:1.4;margin-bottom:8px}
+.xtag{color:var(--bad);font-weight:600;font-size:13px}
+.sum{font-size:14px;margin-top:8px}
 .ar .eq{margin-top:0}
 .bt{font-size:14px;line-height:1.5}
 .bt svg{margin:-6px 2px}
-.nm{font-size:12px;color:var(--muted);line-height:1.2;max-width:70px}
+.nm{font-size:12px;color:var(--muted);line-height:1.2}
 .chip b{font-weight:600}
-.pairs{display:flex;flex-wrap:wrap;gap:6px 14px;margin-bottom:6px}
-.pair{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.pairs{display:flex;flex-direction:column;gap:6px;margin-bottom:8px}
+.pair{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.pair .nm{max-width:none}
 .pair svg{margin:0}
 .ar.x{background:var(--bad-bg)}
 .lab{font-size:13px;font-weight:600;line-height:1.3}
@@ -206,12 +210,16 @@ $('staff').addEventListener('click',e=>{if(!markMode||checked)return;const sv=$(
 const p=pt.matrixTransform(sv.getScreenCTM().inverse());let k=Math.round((p.x-X0)/cur.px);k=Math.max(0,Math.min(cur.u-1,k));
 marks.has(k)?marks.delete(k):marks.add(k);sfx('tick');beatUI();draw(cur,answered);});
 function breakdown(topX,botX){
+const unit=k=>cur.comp?`${U[k]} eighths`:`${U[k]/2} ${U[k]===2?'beat':'beats'}`;
+const miss=x=>x?' <span class="xtag">you missed this</span>':'';
+const chips=cur.items.map((k,i)=>`<span class="chip" style="border-color:var(--g${i%2+1})">${mini(k)}<span class="nm">${NAME[k]}</span><b>= ${unit(k)}</b></span>`).join('<span class="op">+</span>');
+const sum=cur.items.map(k=>cur.comp?U[k]:U[k]/2).join(' + ');
+const topRow=`<div class="ar${topX?' x':''}"><div class="hd"><b>Top number: ${cur.top}</b>${miss(topX)}<br><span class="muted">${cur.comp?'How many 8th notes fit in the measure':'How many beats (quarter notes) fit in the measure'}</span></div><div class="eq">${chips}</div><div class="sum">${sum} = <b>${cur.top}</b></div></div>`;
 const uq=[...new Set(cur.items)].filter(k=>cur.comp?(k==='dq'||k==='s6'):k!=='q');
-const rhs=k=>cur.comp?`${mini('e3')}<span class="nm">three 8ths</span>`:`${mini('q').repeat(U[k]/2)}<span class="nm">${U[k]===2?'1 quarter':U[k]/2+' quarters'}</span>`;
-const pairs=uq.length?`<div class="pairs">${uq.map(k=>`<span class="pair">${mini(k)}<span class="nm">${NAME[k]}</span> = ${rhs(k)}</span>`).join('')}</div>`:'';
-const lab=(t,x)=>`<div class="lab">${t}${x?'<span>missed</span>':''}</div>`;
-const topRow=`<div class="ar${topX?' x':''}">${lab('Top '+cur.top,topX)}<div class="eq">${cur.items.map((k,i)=>`<span class="chip" style="border-color:var(--g${i%2+1})">${mini(k)}<span class="nm">${NAME[k]}</span><b>${cur.comp?U[k]:U[k]/2}</b></span>`).join('<span class="op">+</span>')}<span class="op">=</span><span>${cur.top} ${cur.comp?'eighths':'beats'}</span></div></div>`;
-const botRow=`<div class="ar${botX?' x':''}">${lab('Bottom '+cur.bot,botX)}<div class="bt">${pairs}${cur.comp?`The 8ths come in threes ${mini('e3')} so you count 8ths (⅛ notes). The bottom is <b>8</b>.`:`Each beat = one ${mini('q')} quarter note (¼), so the bottom is <b>4</b>.`}</div></div>`;
+const rhs=k=>cur.comp?`${mini('e3')}<span class="nm">three 8ths</span>`:`${mini('q').repeat(U[k]/2)}<span class="nm">${U[k]===2?'one quarter':U[k]/2+' quarters'}</span>`;
+const pairs=uq.length?`<div class="pairs">${uq.map(k=>`<div class="pair">${mini(k)}<span class="nm">${NAME[k]}</span><span class="op">=</span>${rhs(k)}</div>`).join('')}</div>`:'';
+const why=cur.comp?`The 8ths come in groups of three ${mini('e3')}, so you count every 8th note. <b>8</b> stands for the 8th note.`:`Every beat is one ${mini('q')} quarter note. <b>4</b> stands for the quarter note.`;
+const botRow=`<div class="ar${botX?' x':''}"><div class="hd"><b>Bottom number: ${cur.bot}</b>${miss(botX)}<br><span class="muted">${cur.comp?'Which note you count by':'Which note gets one beat'}</span></div>${pairs}<div class="bt">${why}</div></div>`;
 return topRow+botRow;}
 function beatBreakdown(){
 const want=wantBeats();
