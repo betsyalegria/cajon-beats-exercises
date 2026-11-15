@@ -10,7 +10,7 @@
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.6}
 main{max-width:560px;margin:0 auto;padding:28px 18px 48px}
-h1{font-size:24px;font-weight:600;margin:0 0 4px}
+h1{font-size:24px;font-weight:600;margin:0 0 16px}
 .sub{color:var(--muted);margin:0 0 20px}
 .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin-bottom:16px}
 .ct{font-weight:600;font-size:15px}
@@ -84,8 +84,7 @@ footer{font-size:12px;color:var(--muted);text-align:center;margin-top:24px}
 </head>
 <body>
 <main>
-<h1>Time signature trainer</h1>
-<p class="sub" id="sub">Give me the time signature.</p>
+<h1 id="sub">Give me the time signature.</h1>
 
 <div class="card" id="game">
 <div class="top"><span id="qnum">Question 1 of 12</span><span class="pill" id="lvl">Level 1</span><span id="score">0 correct</span><button id="snd">Sound on</button></div>
@@ -129,6 +128,7 @@ const LV={
 2:{simple:['q','r','e2','s4','h'],comp:['e3','dq'],maxB:4,maxG:2},
 3:{simple:['q','r','e2','s4','h','dh','es','se'],comp:['e3','dq','s6'],maxB:5,maxG:4}};
 const TOTAL=12;
+const FL=f=>f==='comp'||f==='simp'?'the bottom number':NAME[f];
 let n,level,streak,missStreak,correct,answered,cur,log,weak;
 const $=id=>document.getElementById(id),rnd=a=>a[Math.floor(Math.random()*a.length)];
 function wpick(arr){const w=arr.map(k=>weak[k]||1);let t=Math.random()*w.reduce((a,b)=>a+b,0);for(let i=0;i<arr.length;i++){t-=w[i];if(t<=0)return arr[i];}return arr[arr.length-1];}
@@ -233,7 +233,7 @@ const concept=cur.comp?'comp':'simp',types=[...new Set(cur.items)].filter(k=>k!=
 if(ok){correct++;streak++;missStreak=0;[...types,concept].forEach(k=>{if(weak[k]>1)weak[k]=Math.max(1,weak[k]-1.5);});
 const f=focusType();
 if(streak>=2&&level<3&&!f){level++;streak=0;m+=`<div class="muted" style="margin-top:6px">Leveling up.</div>`;}
-else if(streak>=2&&f)m+=`<div class="muted" style="margin-top:6px">Get a couple more with ${NAME[f]} right to level up.</div>`;}
+else if(streak>=2&&f)m+=`<div class="muted" style="margin-top:6px">Get a couple more with ${FL(f)} right to level up.</div>`;}
 else{streak=0;missStreak++;
 if(culprit){weak[culprit]=(weak[culprit]||1)+3;if(culprit!==concept)types.forEach(k=>{if(k!==culprit)weak[k]=(weak[k]||1)+1;});}
 if(missStreak>=2&&level>1){level--;missStreak=0;m+=`<div class="muted" style="margin-top:6px">Stepping back to level ${level} to practice.</div>`;}}
@@ -272,7 +272,7 @@ $('choices').style.display=markMode?'none':'';
 $('playBtn').textContent='Play';anim($('game'),'rise');
 $('qnum').textContent=`Question ${n+1} of ${TOTAL}`;$('lvl').textContent='Level '+level;$('fb').innerHTML='';
 const f=focusType();const shown=f&&(f==='comp'?cur.comp:f==='simp'?!cur.comp:cur.items.includes(f));
-$('focus').innerHTML=shown?`Practicing: <b>${NAME[f]}</b>`:'';
+$('focus').innerHTML=shown?`Practicing: <b>${FL(f)}</b>`:'';
 const ch=$('choices');ch.innerHTML='';
 if(!markMode)choices(cur).forEach(c=>{const b=document.createElement('button');b.innerHTML=tsH(c);b.dataset.v=c;b.onclick=()=>pick(c,b);ch.appendChild(b);});
 beatUI();}
