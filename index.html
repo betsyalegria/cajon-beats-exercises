@@ -59,6 +59,12 @@ button.primary{background:var(--text);color:var(--bg);border-color:var(--text)}
 .choices .ts{font-size:26px;padding:2px 0}
 .ts.i{font-size:15px;margin:0 2px}
 .choices button{min-height:72px}
+.beats{display:grid;grid-template-columns:repeat(auto-fill,minmax(62px,1fr));gap:8px;margin-top:8px}
+.bcell{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px;border-radius:10px;background:var(--soft);text-align:center}
+.bcell.hold{opacity:.75}
+.bn{width:24px;height:24px;border-radius:50%;background:var(--ok);color:var(--card);font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center}
+.rule1{font-size:14px;margin-top:10px;line-height:1.5}
+.rule1 svg{margin:-6px 2px}
 #summary h2{font-size:18px;margin:0 0 8px}
 #summary ul{padding-left:20px;margin:8px 0}
 footer{font-size:12px;color:var(--muted);text-align:center;margin-top:24px}
@@ -157,7 +163,8 @@ function draw(c,ann){
 const items=c.items;let u=0;items.forEach(k=>u+=U[k]);X0=c.mode==='beats'?48:30;const step=(340-X0)/u;
 $('staff').setAttribute('viewBox',ann?'0 0 360 128':'0 0 360 100');
 let s='';
-if(ann){let gx=X0;items.forEach((k,i)=>{const w=step*U[k],cl=`var(--g${i%2+1})`,x0=gx+3,x1=gx+w-3,mid=(x0+x1)/2;
+if(ann&&c.mode==='beats'){const bs=c.comp?3:2;let b=1;for(let k=0;k<u;k+=bs){const mx=X0+step*k-3;s+=`<circle cx="${mx}" cy="104" r="11" fill="var(--ok)"/><text x="${mx}" y="108.5" text-anchor="middle" font-size="13" font-weight="700" fill="var(--card)">${b++}</text>`;}}
+else if(ann){let gx=X0;items.forEach((k,i)=>{const w=step*U[k],cl=`var(--g${i%2+1})`,x0=gx+3,x1=gx+w-3,mid=(x0+x1)/2;
 const lab=c.comp?`${U[k]} eighths`:`${U[k]/2} ${U[k]===2?'beat':'beats'}`,bw=c.comp?70:50;
 s+=`<path d="M${x0} 84 V91 H${x1} V84" fill="none" stroke="${cl}" stroke-width="2.5" stroke-linecap="round"/>`;
 s+=`<rect x="${mid-bw/2}" y="98" width="${bw}" height="24" rx="12" fill="${cl}"/><text x="${mid}" y="114.5" text-anchor="middle" font-size="13" font-weight="600" fill="var(--on-g)">${lab}</text>`;
@@ -198,6 +205,12 @@ const lab=(t,x)=>`<div class="lab">${t}${x?'<span>missed</span>':''}</div>`;
 const topRow=`<div class="ar${topX?' x':''}">${lab('Top '+cur.top,topX)}<div class="eq">${cur.items.map((k,i)=>`<span class="chip" style="border-color:var(--g${i%2+1})">${mini(k)}<span class="nm">${NAME[k]}</span><b>${cur.comp?U[k]:U[k]/2}</b></span>`).join('<span class="op">+</span>')}<span class="op">=</span><span>${cur.top} ${cur.comp?'eighths':'beats'}</span></div></div>`;
 const botRow=`<div class="ar${botX?' x':''}">${lab('Bottom '+cur.bot,botX)}<div class="bt">${pairs}${cur.comp?`The 8ths come in threes ${mini('e3')} so you count 8ths (⅛ notes). The bottom is <b>8</b>.`:`Each beat = one ${mini('q')} quarter note (¼), so the bottom is <b>4</b>.`}</div></div>`;
 return topRow+botRow;}
+function beatBreakdown(){
+const want=wantBeats();
+const cells=want.map((k,i)=>{const {it,start}=itemAt(k);const hold=k!==start;
+return `<div class="bcell${hold?' hold':''}"><span class="bn">${i+1}</span>${hold?`<span class="nm">still holding</span>${mini(it)}<span class="nm">${NAME[it]}</span>`:`${mini(it)}<span class="nm">${NAME[it]}</span>`}</div>`;}).join('');
+const rule=cur.comp?`In ${tsH(cur.top+'/'+cur.bot,'i')}, a beat starts every ${mini('dq')} (three 8ths), so there are <b>${want.length}</b> big beats.`:`In ${tsH(cur.top+'/'+cur.bot,'i')}, a beat starts every ${mini('q')} (quarter note), so there are <b>${want.length}</b> beats.`;
+return `<div class="rule1">${rule}</div><div class="beats">${cells}</div>`;}
 function settle(ok,culprit,m){
 const concept=cur.comp?'comp':'simp',types=[...new Set(cur.items)].filter(k=>k!=='q');
 if(ok){correct++;streak++;missStreak=0;[...types,concept].forEach(k=>{if(weak[k]>1)weak[k]=Math.max(1,weak[k]-1.5);});
@@ -229,7 +242,7 @@ else if(why==='extra')lesson=POS[culprit]?`${mini(culprit)} ${NAME[culprit][0].t
 else lesson=culprit==='r'?`${mini('r')} A quarter rest still gets a beat, even though it's silent.`:`${mini(culprit)} Each ${NAME[culprit]} starts a new beat.`;
 if(culprit==='q')culprit=null;}
 m+=`<div class="lesson">${lesson}</div>`;}
-m+=breakdown(false,false);
+m+=beatBreakdown();
 settle(ok,culprit,m);};
 function render(){
 answered=false;checked=false;marks=new Set();cur=gen();cur.mode=n>0&&Math.random()<0.35?'beats':'sig';markMode=cur.mode==='beats';
