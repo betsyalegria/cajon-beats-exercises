@@ -90,7 +90,7 @@ footer{font-size:12px;color:var(--muted);text-align:center;margin-top:24px}
 <div class="card" id="game">
 <div class="top"><span id="qnum">Question 1 of 12</span><span class="pill" id="lvl">Level 1</span><span id="score">0 correct</span><button id="snd">Sound on</button></div>
 <div id="focus" style="font-size:13px;color:var(--accent);min-height:20px;margin-bottom:6px"></div>
-<div class="staff"><button id="playBtn" class="playb" aria-label="Play the measure">▶ Play</button><svg id="staff" viewBox="0 0 360 100" role="img" aria-label="One measure of rhythm"></svg></div>
+<div class="staff"><button id="playBtn" class="playb" aria-label="Play the measure">Play</button><svg id="staff" viewBox="0 0 360 100" role="img" aria-label="One measure of rhythm"></svg></div>
 <p class="q" id="qtext">What's the time signature?</p>
 <div id="beatMsg" style="font-size:14px;margin:-4px 0 6px"></div>
 <div class="row" style="margin-top:0"><button id="checkBeats" class="sm" style="display:none">Check my beats</button><button id="clearBeats" class="sm" style="display:none">Clear</button></div>
@@ -158,6 +158,7 @@ else{const G=c.top/3;s=[a,`${G}/4`,`${c.top}/4`];s.push(c.top%2===0?`${c.top/2}/
 s=[...new Set(s)];const extra=['2/4','3/4','4/4','6/8','3/8','5/4'];while(s.length<4){const e=rnd(extra);if(!s.includes(e))s.push(e);}
 return s.slice(0,4).sort(()=>Math.random()-.5);}
 const col='currentColor';
+const wrapX=h=>`<div class="row" style="margin-top:8px"><button class="sm xbtn">Explain</button></div><div class="xp" hidden>${h}</div>`;
 const tsH=(v,cls='')=>{const [a,b]=v.split('/');return `<span class="ts ${cls}" aria-label="${a} ${b}"><span>${a}</span><span>${b}</span></span>`;};
 const head=(x,f)=>`<ellipse cx="${x}" cy="60" rx="7" ry="5" transform="rotate(-20 ${x} 60)" fill="${f?col:'none'}" stroke="${col}" stroke-width="1.6"/>`;
 const stem=x=>`<line x1="${x+6.5}" y1="58" x2="${x+6.5}" y2="22" stroke="${col}" stroke-width="1.6"/>`;
@@ -257,8 +258,8 @@ if(why==='inside')lesson=`${mini(culprit)} A ${NAME[culprit]} lasts ${U[culprit]
 else if(why==='extra')lesson=POS[culprit]?`${mini(culprit)} ${NAME[culprit][0].toUpperCase()+NAME[culprit].slice(1)} make one beat together. Mark only the first note.`:`Beats are evenly spaced, one ${mini('q')} quarter note apart. A beat doesn't start partway through one.`;
 else lesson=culprit==='r'?`${mini('r')} A quarter rest still gets a beat, even though it's silent.`:`${mini(culprit)} Each ${NAME[culprit]} starts a new beat.`;
 if(culprit==='q')culprit=null;}
-m+=`<div class="lesson">${lesson}</div>`;}
-m+=beatBreakdown();
+}
+m+=wrapX((lesson?`<div class="lesson">${lesson}</div>`:'')+beatBreakdown());
 settle(ok,culprit,m);juice(ok,null);};
 function render(){
 playing++;const ph0=document.getElementById('ph');if(ph0)ph0.remove();
@@ -268,7 +269,7 @@ $('beatMsg').innerHTML=markMode?'<span class="muted">Tap where each beat starts.
 $('sub').textContent=markMode?'Place the beats.':'Give me the time signature.';
 $('qtext').innerHTML=markMode?`This measure is in ${tsH(cur.top+'/'+cur.bot,'i')}. Where do the beats start?`:"What's the time signature?";
 $('choices').style.display=markMode?'none':'';
-$('playBtn').textContent='▶ Play';anim($('game'),'rise');
+$('playBtn').textContent='Play';anim($('game'),'rise');
 $('qnum').textContent=`Question ${n+1} of ${TOTAL}`;$('lvl').textContent='Level '+level;$('fb').innerHTML='';
 const f=focusType();const shown=f&&(f==='comp'?cur.comp:f==='simp'?!cur.comp:cur.items.includes(f));
 $('focus').innerHTML=shown?`Practicing: <b>${NAME[f]}</b>`:'';
@@ -284,15 +285,17 @@ draw(cur,true);
 const topX=!ok&&pt!==cur.top,botX=!ok&&pb!==cur.bot,bd=breakdown(topX,botX);
 const concept=cur.comp?'comp':'simp',types=[...new Set(cur.items)].filter(k=>k!=='q');
 let m,culprit=null;
-if(ok)m=`<span class="good">Right, it's ${tsH(ans,'i')}.</span>${bd}`;
-else{m=`<span class="wrong">Not quite. You said ${tsH(c,'i')}, but it's ${tsH(ans,'i')}.</span>${bd}`;
+let L='';
+if(ok)m=`<span class="good">Right, it's ${tsH(ans,'i')}.</span>`;
+else{m=`<span class="wrong">Not quite. You said ${tsH(c,'i')}, but it's ${tsH(ans,'i')}.</span>`;
 if(pb!==cur.bot)culprit=concept;
 else{const diff=pt-cur.top,pri=diff>0?['s4','s6','es','se','e2','e3','r','dq','dh','h']:['r','dh','h','dq','e3','e2','s4','s6','es','se'];
 culprit=types.sort((a,b)=>(weak[b]||1)-(weak[a]||1)||pri.indexOf(a)-pri.indexOf(b))[0]||null;
 if(culprit){const v=cur.comp?U[culprit]:U[culprit]/2,u=cur.comp?(v===1?'eighth':'eighths'):(v===1?'beat':'beats');
-m+=`<div class="lesson"><b>Top number:</b> ${mini(culprit)} counts as ${v} ${u}${culprit==='r'?', even though it\'s silent':`, not ${WRONG[culprit]}`}.</div>`;}}}
+L=`<div class="lesson"><b>Top number:</b> ${mini(culprit)} counts as ${v} ${u}${culprit==='r'?', even though it\'s silent':`, not ${WRONG[culprit]}`}.</div>`;}}}
+m+=wrapX(L+bd);
 settle(ok,culprit,m);juice(ok,b);}
-function juice(ok,b){sfx(ok?'ok':'bad');if(b)anim(b,ok?'pop':'shake');anim($('fb'),'rise');if(ok)anim($('score'),'pop');$('playBtn').textContent='▶ Play with beat';setTimeout(()=>play(true),450);}
+function juice(ok,b){sfx(ok?'ok':'bad');if(b)anim(b,ok?'pop':'shake');anim($('fb'),'rise');if(ok)anim($('score'),'pop');setTimeout(()=>play(true),450);}
 function finish(){
 $('game').style.display='none';$('summary').style.display='';
 $('sumTitle').textContent=`You got ${correct} of ${TOTAL} and reached level ${level}`;
@@ -317,7 +320,7 @@ if(kind==='ok'){tone(t,880,'sine',.18,.22);tone(t+.09,1320,'sine',.18,.3);}
 else if(kind==='bad'){tone(t,200,'triangle',.25,.28,120);}
 else if(kind==='tick'){tone(t,3000,'sine',.12,.03);}
 else if(kind==='win'){[523,659,784,1047].forEach((f,i)=>tone(t+i*.11,f,'sine',.18,.35));}}
-function play(withBeats){if(muted||!cur)return;const c=ac();if(!c)return;const T=.28,t0=c.currentTime+.08,beats=wantBeats();let a=0;
+function play(withBeats){if(muted||!cur)return;const c=ac();if(!c)return;const T=.42,t0=c.currentTime+.08,beats=wantBeats();let a=0;
 cur.items.forEach(k=>{if(k!=='r')(POS[k]||[0]).forEach(p=>{const at=Math.round((a+p*U[k])*1000)/1000,t=t0+at*T;if(at===0)boom(t);else slap(t,beats.includes(at)?1:.45);});a+=U[k];});
 if(withBeats)beats.forEach(b=>click(t0+b*T,b===0));
 const id=++playing,dur=cur.u*T*1000,st=performance.now()+80;
@@ -335,6 +338,7 @@ $('snd').onclick=()=>{muted=!muted;$('snd').textContent=muted?'Sound off':'Sound
 function start(){n=0;level=1;streak=0;missStreak=0;correct=0;log=[];weak={};$('summary').style.display='none';$('game').style.display='';$('score').textContent='0 correct';render();}
 $('next').onclick=()=>{if(markMode&&!checked){$('checkBeats').onclick();return;}if(!answered){$('fb').innerHTML=`<span class="wrong" style="font-size:13px">${markMode?'Place your beats and tap Check my beats first':'Pick an answer first'}</span>`;return;}if(n<TOTAL-1){n++;render();}else finish();};
 $('again').onclick=start;
+$('fb').addEventListener('click',e=>{const b=e.target.closest('.xbtn');if(!b)return;const x=$('fb').querySelector('.xp');x.hidden=!x.hidden;b.textContent=x.hidden?'Explain':'Hide explanation';if(!x.hidden)anim(x,'rise');});
 start();
 </script>
 </body>
