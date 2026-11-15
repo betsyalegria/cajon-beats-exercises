@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Time signature trainer</title>
+<style>
+:root{--bg:#faf9f5;--card:#ffffff;--soft:#f0eee6;--text:#1f1e1d;--muted:#6b6a65;--border:rgba(31,30,29,.15);--accent:#185FA5;--accent-bg:#E6F1FB;--ok:#3B6D11;--ok-bg:#EAF3DE;--bad:#A32D2D;--bad-bg:#FCEBEB;--g1:#7F77DD;--g2:#1D9E75;--on-g:#ffffff}
+@media (prefers-color-scheme:dark){:root{--bg:#1f1e1d;--card:#2a2927;--soft:#33322f;--text:#f3f1ea;--muted:#a9a79f;--border:rgba(243,241,234,.18);--accent:#85B7EB;--accent-bg:#0C447C;--ok:#97C459;--ok-bg:#27500A;--bad:#F09595;--bad-bg:#791F1F;--g1:#AFA9EC;--g2:#5DCAA5;--on-g:#1f1e1d}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.6}
+main{max-width:560px;margin:0 auto;padding:28px 18px 48px}
+h1{font-size:24px;font-weight:600;margin:0 0 4px}
+.sub{color:var(--muted);margin:0 0 20px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin-bottom:16px}
+.ct{font-weight:600;font-size:15px}
+details summary{cursor:pointer;font-weight:600;font-size:15px}
+.cheat{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 16px;font-size:14px;margin:8px 0 0}
+.cheat div{display:flex;justify-content:space-between;gap:8px;border-bottom:1px solid var(--border);padding:4px 0}
+.cheat b{font-weight:600;white-space:nowrap}
+.rule{font-size:14px;margin:8px 0 0;padding-left:18px}
+.rule li{margin-bottom:4px}
+.top{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--muted);margin-bottom:10px}
+.pill{background:var(--accent-bg);color:var(--accent);padding:2px 10px;border-radius:999px;font-weight:600}
+.staff{background:var(--soft);border-radius:12px;padding:12px 8px}
+svg{display:block;width:100%;color:var(--text)}
+.q{font-size:14px;color:var(--muted);margin:14px 0 8px}
+.choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+button{font:inherit;font-size:16px;color:var(--text);background:transparent;border:1px solid var(--border);border-radius:10px;padding:10px 14px;cursor:pointer;min-height:44px}
+button:hover{background:var(--soft)}
+button.ok{border-color:var(--ok);background:var(--ok-bg);color:var(--ok)}
+button.bad{border-color:var(--bad);background:var(--bad-bg);color:var(--bad)}
+button.sm{font-size:14px;min-height:38px;padding:6px 12px}
+button.primary{background:var(--text);color:var(--bg);border-color:var(--text)}
+#fb{font-size:15px;min-height:26px;margin-top:12px}
+.good{color:var(--ok);font-weight:600}.wrong{color:var(--bad);font-weight:600}
+.muted{color:var(--muted)}
+.row{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
+.eq{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:10px;font-size:14px}
+.chip{display:inline-flex;align-items:center;gap:6px;border:2px solid;border-radius:999px;padding:3px 10px;background:var(--card)}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+.op{color:var(--muted);font-weight:600}
+.total{font-weight:600}
+.ar{display:grid;grid-template-columns:70px minmax(0,1fr);gap:8px;align-items:center;padding:8px 10px;border-radius:10px;margin-top:8px;background:var(--soft)}
+.ar .eq{margin-top:0}
+.bt{font-size:14px;line-height:1.5}
+.bt svg{margin:-6px 2px}
+.nm{font-size:12px;color:var(--muted);line-height:1.2;max-width:70px}
+.chip b{font-weight:600}
+.pairs{display:flex;flex-wrap:wrap;gap:6px 14px;margin-bottom:6px}
+.pair{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.pair svg{margin:0}
+.ar.x{background:var(--bad-bg)}
+.lab{font-size:13px;font-weight:600;line-height:1.3}
+.lab span{display:block;font-size:12px;font-weight:600;color:var(--bad)}
+.lesson{margin-top:10px;padding:10px 12px;background:var(--accent-bg);color:var(--text);border-radius:10px;font-size:14px}
+.lesson b{color:var(--accent)}
+#summary h2{font-size:18px;margin:0 0 8px}
+#summary ul{padding-left:20px;margin:8px 0}
+footer{font-size:12px;color:var(--muted);text-align:center;margin-top:24px}
+</style>
+</head>
+<body>
+<main>
+<h1>Time signature trainer</h1>
+<p class="sub">Give me the time signature, or show me where the beats are.</p>
+
+<div class="card" id="game">
+<div class="top"><span id="qnum">Question 1 of 12</span><span class="pill" id="lvl">Level 1</span><span id="score">0 correct</span></div>
+<div id="focus" style="font-size:13px;color:var(--accent);min-height:20px;margin-bottom:6px"></div>
+<div class="staff"><svg id="staff" viewBox="0 0 360 100" role="img" aria-label="One measure of rhythm"></svg></div>
+<p class="q" id="qtext">What's the time signature?</p>
+<div id="beatMsg" style="font-size:14px;margin:-4px 0 6px"></div>
+<div class="row" style="margin-top:0"><button id="checkBeats" class="sm" style="display:none">Check my beats</button><button id="clearBeats" class="sm" style="display:none">Clear</button></div>
+<div class="choices" id="choices"></div>
+<div id="fb" aria-live="polite"></div>
+<div class="row"><button id="next" class="primary">Next measure</button></div>
+</div>
+
+<div class="card" id="summary" style="display:none">
+<h2 id="sumTitle"></h2>
+<div id="sumBody"></div>
+<div class="row"><button id="again" class="primary">Practice again</button></div>
+</div>
+
+<footer>Level 1: quarter-note time with 8ths, 16ths and rests · Level 2: 6/8 and the 3/4 trap · Level 3: everything, including 3/8, 9/8, 12/8 and 5/4</footer>
+</main>
+<script>
+const U={q:2,r:2,e2:2,s4:2,es:2,se:2,h:4,dh:6,e3:3,dq:3,s6:3};
+const NAME={q:'quarter',r:'quarter rest',e2:'two 8ths',s4:'four 16ths',es:'8th + two 16ths',se:'two 16ths + 8th',h:'half note',dh:'dotted half',e3:'three 8ths',dq:'dotted quarter',s6:'six 16ths',comp:'groups of three 8ths (bottom = 8)',simp:'quarter-note beats (bottom = 4)'};
+const TIP={
+q:'A quarter note is 1 beat.',
+r:'A rest is silence, but it still takes up time: a quarter rest is 1 beat. Count it.',
+e2:'Two 8ths joined by one beam make 1 beat together, not 2.',
+s4:'Four 16ths joined by two beams make 1 beat together, not 4.',
+es:'One 8th plus two 16ths under one beam still adds up to 1 beat (½ + ¼ + ¼).',
+se:'Two 16ths plus one 8th under one beam still adds up to 1 beat (¼ + ¼ + ½).',
+h:'A hollow note with a stem is a half note: 2 beats. Tap twice.',
+dh:'The dot adds half the note\'s value, so a dotted half is 2 + 1 = 3 beats.',
+e3:'In /8 time you count every 8th, so a beamed group of three 8ths counts as 3.',
+dq:'A dotted quarter equals three 8ths, so in /8 time it counts as 3.',
+s6:'Six 16ths under a beam equal three 8ths, so in /8 time they count as 3.',
+comp:'When 8ths are beamed in groups of three (or you see dotted quarters), the music counts in 8ths, so the bottom number is 8. Then count every 8th for the top.',
+simp:'When notes group into quarter-note beats (pairs of 8ths, fours of 16ths, quarters), the bottom number is 4. Then count the quarter-note beats for the top.'};
+const LV={
+1:{simple:['q','r','e2','s4'],comp:null,maxB:4},
+2:{simple:['q','r','e2','s4','h'],comp:['e3','dq'],maxB:4,maxG:2},
+3:{simple:['q','r','e2','s4','h','dh','es','se'],comp:['e3','dq','s6'],maxB:5,maxG:4}};
+const TOTAL=12;
+let n,level,streak,missStreak,correct,answered,cur,log,weak;
+const $=id=>document.getElementById(id),rnd=a=>a[Math.floor(Math.random()*a.length)];
+function wpick(arr){const w=arr.map(k=>weak[k]||1);let t=Math.random()*w.reduce((a,b)=>a+b,0);for(let i=0;i<arr.length;i++){t-=w[i];if(t<=0)return arr[i];}return arr[arr.length-1];}
+function focusType(){const L=LV[level];let best=null,bw=1;for(const k in weak){const ok=k==='comp'?!!L.comp:k==='simp'?true:(L.simple.includes(k)||(L.comp&&L.comp.includes(k)));if(ok&&weak[k]>bw){bw=weak[k];best=k;}}return best;}
+function gen(){
+const L=LV[level],f=focusType(),useF=f&&Math.random()<0.75;
+let comp=!!L.comp&&Math.random()<0.45;
+if(useF){if(f==='comp'||(L.comp&&L.comp.includes(f)))comp=true;else comp=false;}
+for(let t=0;t<400;t++){
+if(comp){
+const G=level===2?2:1+Math.floor(Math.random()*L.maxG);
+const items=[];for(let i=0;i<G;i++)items.push(wpick(L.comp));
+if(items.filter(k=>k==='s6').length>2)continue;
+if(useF&&f!=='comp'&&!items.includes(f))continue;
+return{items,comp:true,top:3*G,bot:8};}
+const B=2+Math.floor(Math.random()*(L.maxB-1));let r=2*B,items=[];
+while(r>0){const ok=L.simple.filter(k=>U[k]<=r);const k=wpick(ok);items.push(k);r-=U[k];}
+if(new Set(items).size<2||items.length>6)continue;
+if(level===1&&!(items.includes('e2')||items.includes('s4')))continue;
+if(useF&&f!=='simp'&&!items.includes(f))continue;
+return{items,comp:false,top:B,bot:4};}
+return{items:['q','e2','s4','q'],comp:false,top:4,bot:4};}
+function choices(c){
+const a=`${c.top}/${c.bot}`;let s;
+if(!c.comp)s=[a,`${c.top}/8`,`${c.top+1}/4`,{2:'6/8',3:'6/8',4:'12/8',5:'4/4'}[c.top]];
+else{const G=c.top/3;s=[a,`${G}/4`,`${c.top}/4`];s.push(c.top%2===0?`${c.top/2}/4`:`${c.top+3}/8`);}
+s=[...new Set(s)];const extra=['2/4','3/4','4/4','6/8','3/8','5/4'];while(s.length<4){const e=rnd(extra);if(!s.includes(e))s.push(e);}
+return s.slice(0,4).sort(()=>Math.random()-.5);}
+const col='currentColor';
+const head=(x,f)=>`<ellipse cx="${x}" cy="60" rx="7" ry="5" transform="rotate(-20 ${x} 60)" fill="${f?col:'none'}" stroke="${col}" stroke-width="1.6"/>`;
+const stem=x=>`<line x1="${x+6.5}" y1="58" x2="${x+6.5}" y2="22" stroke="${col}" stroke-width="1.6"/>`;
+const beam=(a,b,y)=>`<rect x="${a+5.7}" y="${y}" width="${b-a+1.6}" height="4.5" fill="${col}"/>`;
+const rest=x=>`<path d="M${x} 40 L${x+8} 50 L${x+2} 57 L${x+9} 67 C${x+1} 63 ${x-2} 71 ${x+5} 78" fill="none" stroke="${col}" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>`;
+const POS={e2:[0,.5],s4:[0,.25,.5,.75],es:[0,.5,.75],se:[0,.25,.5],e3:[0,1/3,2/3],s6:[0,1/6,2/6,3/6,4/6,5/6]};
+const SEC={s4:[0,3],s6:[0,5],es:[1,2],se:[0,1]};
+const WRONG={s4:4,e2:2,es:3,se:3,h:1,dh:2,r:0,e3:1,dq:1,s6:6};
+function mini(k){let s,w;const H=50;
+if(k==='r'){s=rest(8);w=24;}
+else if(['q','h','dh','dq'].includes(k)){s=head(10,k==='q'||k==='dq')+stem(10);if(k==='dh'||k==='dq'){s+=`<circle cx="23" cy="57" r="2.2" fill="currentColor"/>`;w=30;}else w=24;}
+else{const xs=POS[k].map((_,i)=>10+i*17);xs.forEach(x=>s=(s||'')+head(x,true)+stem(x));s+=beam(xs[0],xs[xs.length-1],20);if(SEC[k])s+=beam(xs[SEC[k][0]],xs[SEC[k][1]],28);w=xs[xs.length-1]+18;}
+return `<svg viewBox="0 18 ${w} ${H+14}" height="30" width="${Math.round(w*30/(H+14))}" style="display:inline-block;vertical-align:middle;width:auto" aria-label="${NAME[k]}">${s}</svg>`;}
+function draw(c,ann){
+const items=c.items;let u=0;items.forEach(k=>u+=U[k]);X0=c.mode==='beats'?48:30;const step=(340-X0)/u;
+$('staff').setAttribute('viewBox',ann?'0 0 360 128':'0 0 360 100');
+let s='';
+if(ann){let gx=X0;items.forEach((k,i)=>{const w=step*U[k],cl=`var(--g${i%2+1})`,x0=gx+3,x1=gx+w-3,mid=(x0+x1)/2;
+const lab=c.comp?`${U[k]} eighths`:`${U[k]/2} ${U[k]===2?'beat':'beats'}`,bw=c.comp?70:50;
+s+=`<path d="M${x0} 84 V91 H${x1} V84" fill="none" stroke="${cl}" stroke-width="2.5" stroke-linecap="round"/>`;
+s+=`<rect x="${mid-bw/2}" y="98" width="${bw}" height="24" rx="12" fill="${cl}"/><text x="${mid}" y="114.5" text-anchor="middle" font-size="13" font-weight="600" fill="var(--on-g)">${lab}</text>`;
+gx+=w;});}
+s+=`<line x1="10" y1="60" x2="350" y2="60" stroke="${col}" stroke-opacity=".35"/><line x1="10" y1="40" x2="10" y2="80" stroke="${col}" stroke-width="1.5"/><line x1="350" y1="40" x2="350" y2="80" stroke="${col}" stroke-width="1.5"/>`;
+if(c.mode==='beats')s+=`<text x="30" y="55" text-anchor="middle" font-size="20" font-weight="700" fill="${col}">${c.top}</text><text x="30" y="77" text-anchor="middle" font-size="20" font-weight="700" fill="${col}">${c.bot}</text>`;
+let x=X0;
+items.forEach(k=>{const w=step*U[k];
+if(k==='r'){s+=rest(x+w*0.35);}
+else if(['q','h','dh','dq'].includes(k)){const nx=x+step*0.6;s+=head(nx,k==='q'||k==='dq')+stem(nx);if(k==='dh'||k==='dq')s+=`<circle cx="${nx+13}" cy="57" r="2.2" fill="${col}"/>`;}
+else{const xs=POS[k].map(p=>x+w*p+Math.min(w*0.1,10));xs.forEach(nx=>s+=head(nx,true)+stem(nx));
+s+=beam(xs[0],xs[xs.length-1],20);if(SEC[k])s+=beam(xs[SEC[k][0]],xs[SEC[k][1]],28);}
+x+=w;});
+cur.u=u;cur.px=step;
+if(markMode||checked){const bs=cur.comp?3:2,want=[];for(let k=0;k<u;k+=bs)want.push(k);
+const all=[...new Set([...marks,...(checked?want:[])])].sort((a,b)=>a-b);
+all.forEach(k=>{const mx=X0+step*k-3,isM=marks.has(k),good=want.includes(k);
+let cl='var(--accent)',dash='';
+if(checked){cl=isM&&good?'var(--ok)':isM?'var(--bad)':'var(--ok)';if(!isM)dash=' stroke-dasharray="4 4"';}
+s+=`<line x1="${mx}" y1="12" x2="${mx}" y2="84" stroke="${cl}" stroke-width="2.5"${dash}/>`;
+if(isM)s+=`<circle cx="${mx}" cy="10" r="5" fill="${cl}"/>`;});
+if(markMode&&!checked)s+=`<rect x="12" y="4" width="336" height="88" fill="transparent" style="cursor:pointer"/>`;}
+$('staff').innerHTML=s;}
+let marks=new Set(),markMode=false,checked=false,X0=30;
+function wantBeats(){const bs=cur.comp?3:2,w=[];for(let k=0;k<cur.u;k+=bs)w.push(k);return w;}
+function itemAt(k){let a=0;for(const it of cur.items){if(k<a+U[it])return{it,start:a};a+=U[it];}return{it:cur.items[cur.items.length-1],start:a};}
+function beatUI(){const on=markMode&&!checked;$('checkBeats').style.display=on?'':'none';$('clearBeats').style.display=on&&marks.size?'':'none';}
+$('clearBeats').onclick=()=>{marks=new Set();beatUI();draw(cur,answered);};
+$('staff').addEventListener('click',e=>{if(!markMode||checked)return;const sv=$('staff'),pt=sv.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;
+const p=pt.matrixTransform(sv.getScreenCTM().inverse());let k=Math.round((p.x-X0)/cur.px);k=Math.max(0,Math.min(cur.u-1,k));
+marks.has(k)?marks.delete(k):marks.add(k);beatUI();draw(cur,answered);});
+function breakdown(topX,botX){
+const uq=[...new Set(cur.items)].filter(k=>cur.comp?(k==='dq'||k==='s6'):k!=='q');
+const rhs=k=>cur.comp?`${mini('e3')}<span class="nm">three 8ths</span>`:`${mini('q').repeat(U[k]/2)}<span class="nm">${U[k]===2?'1 quarter':U[k]/2+' quarters'}</span>`;
+const pairs=uq.length?`<div class="pairs">${uq.map(k=>`<span class="pair">${mini(k)}<span class="nm">${NAME[k]}</span> = ${rhs(k)}</span>`).join('')}</div>`:'';
+const lab=(t,x)=>`<div class="lab">${t}${x?'<span>missed</span>':''}</div>`;
+const topRow=`<div class="ar${topX?' x':''}">${lab('Top '+cur.top,topX)}<div class="eq">${cur.items.map((k,i)=>`<span class="chip" style="border-color:var(--g${i%2+1})">${mini(k)}<span class="nm">${NAME[k]}</span><b>${cur.comp?U[k]:U[k]/2}</b></span>`).join('<span class="op">+</span>')}<span class="op">=</span><span>${cur.top} ${cur.comp?'eighths':'beats'}</span></div></div>`;
+const botRow=`<div class="ar${botX?' x':''}">${lab('Bottom '+cur.bot,botX)}<div class="bt">${pairs}${cur.comp?`The 8ths come in threes ${mini('e3')} so you count 8ths (⅛ notes). The bottom is <b>8</b>.`:`Each beat = one ${mini('q')} quarter note (¼), so the bottom is <b>4</b>.`}</div></div>`;
+return topRow+botRow;}
+function settle(ok,culprit,m){
+const concept=cur.comp?'comp':'simp',types=[...new Set(cur.items)].filter(k=>k!=='q');
+if(ok){correct++;streak++;missStreak=0;[...types,concept].forEach(k=>{if(weak[k]>1)weak[k]=Math.max(1,weak[k]-1.5);});
+const f=focusType();
+if(streak>=2&&level<3&&!f){level++;streak=0;m+=`<div class="muted" style="margin-top:6px">Leveling up.</div>`;}
+else if(streak>=2&&f)m+=`<div class="muted" style="margin-top:6px">Get a couple more with ${NAME[f]} right to level up.</div>`;}
+else{streak=0;missStreak++;
+if(culprit){weak[culprit]=(weak[culprit]||1)+3;if(culprit!==concept)types.forEach(k=>{if(k!==culprit)weak[k]=(weak[k]||1)+1;});}
+if(missStreak>=2&&level>1){level--;missStreak=0;m+=`<div class="muted" style="margin-top:6px">Stepping back to level ${level} to practice.</div>`;}}
+log.push({items:cur.items,comp:cur.comp,ok});
+$('score').textContent=correct+' correct';$('fb').innerHTML=m;}
+$('checkBeats').onclick=()=>{if(!marks.size){$('beatMsg').innerHTML='<span class="wrong" style="font-size:13px">Tap the measure to place at least one beat first</span>';return;}
+checked=true;answered=true;beatUI();draw(cur,true);
+const want=wantBeats(),missed=want.filter(k=>!marks.has(k)),extra=[...marks].filter(k=>!want.includes(k));
+const ok=!missed.length&&!extra.length;
+$('beatMsg').innerHTML=ok?'':`<span class="muted">Solid green = right. Dashed green = beats you missed.${extra.length?' Red = extra marks.':''}</span>`;
+let m=ok?`<span class="good">You found all ${want.length} beats.</span>`:`<span class="wrong">You found ${want.length-missed.length} of ${want.length} beats${extra.length?`, plus ${extra.length} extra`:''}.</span>`;
+let culprit=null,lesson='';
+if(!ok){
+if(cur.comp){culprit='comp';lesson=`In ${cur.top}/8, each beat is a group of three 8ths ${mini('e3')}. Mark only the first note of each group of three.`;}
+else{const cands=[];
+missed.forEach(k=>{const {it,start}=itemAt(k);cands.push({k:it,why:k===start?'start':'inside'});});
+extra.forEach(k=>{const {it}=itemAt(k);cands.push({k:it,why:'extra'});});
+const c=cands.find(x=>x.why==='inside')||cands.find(x=>x.why==='extra')||cands[0];culprit=c.k==='q'&&cands.length>1?(cands.find(x=>x.k!=='q')||c).k:c.k;
+const why=(cands.find(x=>x.k===culprit)||c).why;
+if(why==='inside')lesson=`${mini(culprit)} A ${NAME[culprit]} lasts ${U[culprit]/2} beats, so a beat lands in the middle of it.`;
+else if(why==='extra')lesson=POS[culprit]?`${mini(culprit)} ${NAME[culprit][0].toUpperCase()+NAME[culprit].slice(1)} make one beat together. Mark only the first note.`:`Beats are evenly spaced, one ${mini('q')} quarter note apart. A beat doesn't start partway through one.`;
+else lesson=culprit==='r'?`${mini('r')} A quarter rest still gets a beat, even though it's silent.`:`${mini(culprit)} Each ${NAME[culprit]} starts a new beat.`;
+if(culprit==='q')culprit=null;}
+m+=`<div class="lesson">${lesson}</div>`;}
+m+=breakdown(false,false);
+settle(ok,culprit,m);};
+function render(){
+answered=false;checked=false;marks=new Set();cur=gen();cur.mode=n>0&&Math.random()<0.35?'beats':'sig';markMode=cur.mode==='beats';
+draw(cur,false);beatUI();
+$('beatMsg').innerHTML=markMode?'<span class="muted">Tap where each beat starts. Tap a line again to remove it.</span>':'';
+$('qtext').textContent=markMode?`This measure is in ${cur.top}/${cur.bot}. Where do the beats start?`:"What's the time signature?";
+$('choices').style.display=markMode?'none':'';
+$('qnum').textContent=`Question ${n+1} of ${TOTAL}`;$('lvl').textContent='Level '+level;$('fb').innerHTML='';
+const f=focusType();const shown=f&&(f==='comp'?cur.comp:f==='simp'?!cur.comp:cur.items.includes(f));
+$('focus').innerHTML=shown?`Practicing: <b>${NAME[f]}</b>`:'';
+const ch=$('choices');ch.innerHTML='';
+if(!markMode)choices(cur).forEach(c=>{const b=document.createElement('button');b.textContent=c;b.onclick=()=>pick(c,b);ch.appendChild(b);});
+$('next').textContent=n===TOTAL-1?'See my results':'Next measure';}
+function pick(c,b){
+if(answered)return;answered=true;
+const ans=`${cur.top}/${cur.bot}`,ok=c===ans,[pt,pb]=c.split('/').map(Number);
+b.classList.add(ok?'ok':'bad');
+if(!ok)[...$('choices').children].forEach(x=>{if(x.textContent===ans)x.classList.add('ok')});
+draw(cur,true);
+const topX=!ok&&pt!==cur.top,botX=!ok&&pb!==cur.bot,bd=breakdown(topX,botX);
+const concept=cur.comp?'comp':'simp',types=[...new Set(cur.items)].filter(k=>k!=='q');
+let m,culprit=null;
+if(ok)m=`<span class="good">Right, it's ${ans}.</span>${bd}`;
+else{m=`<span class="wrong">Not quite. You said ${c}, but it's ${ans}.</span>${bd}`;
+if(pb!==cur.bot)culprit=concept;
+else{const diff=pt-cur.top,pri=diff>0?['s4','s6','es','se','e2','e3','r','dq','dh','h']:['r','dh','h','dq','e3','e2','s4','s6','es','se'];
+culprit=types.sort((a,b)=>(weak[b]||1)-(weak[a]||1)||pri.indexOf(a)-pri.indexOf(b))[0]||null;
+if(culprit){const v=cur.comp?U[culprit]:U[culprit]/2,u=cur.comp?(v===1?'eighth':'eighths'):(v===1?'beat':'beats');
+m+=`<div class="lesson"><b>Top number:</b> ${mini(culprit)} counts as ${v} ${u}${culprit==='r'?', even though it\'s silent':`, not ${WRONG[culprit]}`}.</div>`;}}}
+settle(ok,culprit,m);}
+function finish(){
+$('game').style.display='none';$('summary').style.display='';
+$('sumTitle').textContent=`You got ${correct} of ${TOTAL} and reached level ${level}`;
+const ranked=Object.keys(weak).filter(k=>weak[k]>1).sort((a,b)=>weak[b]-weak[a]).slice(0,2);
+let h;
+if(!log.some(l=>!l.ok))h=`<p>No misses. Nice work. Practice again for a new set of measures.</p>`;
+else if(!ranked.length)h=`<p>You worked through your misses during the round. Practice again to lock it in.</p>`;
+else h=`<p>What to work on next:</p><ul>${ranked.map(k=>`<li><b>${NAME[k]}</b>: ${TIP[k]}</li>`).join('')}</ul><p class="muted">Tip: first decide the bottom number from how the notes are grouped, then count for the top.</p>`;
+$('sumBody').innerHTML=h;}
+function start(){n=0;level=1;streak=0;missStreak=0;correct=0;log=[];weak={};$('summary').style.display='none';$('game').style.display='';$('score').textContent='0 correct';render();}
+$('next').onclick=()=>{if(!answered){$('fb').innerHTML=`<span class="wrong" style="font-size:13px">${markMode?'Place your beats and tap Check my beats first':'Pick an answer first'}</span>`;return;}if(n<TOTAL-1){n++;render();}else finish();};
+$('again').onclick=start;
+start();
+</script>
+</body>
+</html>
