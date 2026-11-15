@@ -55,6 +55,10 @@ button.primary{background:var(--text);color:var(--bg);border-color:var(--text)}
 .lab span{display:block;font-size:12px;font-weight:600;color:var(--bad)}
 .lesson{margin-top:10px;padding:10px 12px;background:var(--accent-bg);color:var(--text);border-radius:10px;font-size:14px}
 .lesson b{color:var(--accent)}
+.ts{display:inline-flex;flex-direction:column;align-items:center;line-height:.95;font-weight:800;font-family:Georgia,'Times New Roman',serif;vertical-align:middle}
+.choices .ts{font-size:26px;padding:2px 0}
+.ts.i{font-size:15px;margin:0 2px}
+.choices button{min-height:72px}
 #summary h2{font-size:18px;margin:0 0 8px}
 #summary ul{padding-left:20px;margin:8px 0}
 footer{font-size:12px;color:var(--muted);text-align:center;margin-top:24px}
@@ -136,6 +140,7 @@ else{const G=c.top/3;s=[a,`${G}/4`,`${c.top}/4`];s.push(c.top%2===0?`${c.top/2}/
 s=[...new Set(s)];const extra=['2/4','3/4','4/4','6/8','3/8','5/4'];while(s.length<4){const e=rnd(extra);if(!s.includes(e))s.push(e);}
 return s.slice(0,4).sort(()=>Math.random()-.5);}
 const col='currentColor';
+const tsH=(v,cls='')=>{const [a,b]=v.split('/');return `<span class="ts ${cls}" aria-label="${a} ${b}"><span>${a}</span><span>${b}</span></span>`;};
 const head=(x,f)=>`<ellipse cx="${x}" cy="60" rx="7" ry="5" transform="rotate(-20 ${x} 60)" fill="${f?col:'none'}" stroke="${col}" stroke-width="1.6"/>`;
 const stem=x=>`<line x1="${x+6.5}" y1="58" x2="${x+6.5}" y2="22" stroke="${col}" stroke-width="1.6"/>`;
 const beam=(a,b,y)=>`<rect x="${a+5.7}" y="${y}" width="${b-a+1.6}" height="4.5" fill="${col}"/>`;
@@ -158,7 +163,7 @@ s+=`<path d="M${x0} 84 V91 H${x1} V84" fill="none" stroke="${cl}" stroke-width="
 s+=`<rect x="${mid-bw/2}" y="98" width="${bw}" height="24" rx="12" fill="${cl}"/><text x="${mid}" y="114.5" text-anchor="middle" font-size="13" font-weight="600" fill="var(--on-g)">${lab}</text>`;
 gx+=w;});}
 s+=`<line x1="10" y1="60" x2="350" y2="60" stroke="${col}" stroke-opacity=".35"/><line x1="10" y1="40" x2="10" y2="80" stroke="${col}" stroke-width="1.5"/><line x1="350" y1="40" x2="350" y2="80" stroke="${col}" stroke-width="1.5"/>`;
-if(c.mode==='beats')s+=`<text x="30" y="55" text-anchor="middle" font-size="20" font-weight="700" fill="${col}">${c.top}</text><text x="30" y="77" text-anchor="middle" font-size="20" font-weight="700" fill="${col}">${c.bot}</text>`;
+if(c.mode==='beats')s+=`<text x="30" y="55" text-anchor="middle" font-size="22" font-weight="800" font-family="Georgia,serif" fill="${col}">${c.top}</text><text x="30" y="77" text-anchor="middle" font-size="22" font-weight="800" font-family="Georgia,serif" fill="${col}">${c.bot}</text>`;
 let x=X0;
 items.forEach(k=>{const w=step*U[k];
 if(k==='r'){s+=rest(x+w*0.35);}
@@ -179,7 +184,8 @@ $('staff').innerHTML=s;}
 let marks=new Set(),markMode=false,checked=false,X0=30;
 function wantBeats(){const bs=cur.comp?3:2,w=[];for(let k=0;k<cur.u;k+=bs)w.push(k);return w;}
 function itemAt(k){let a=0;for(const it of cur.items){if(k<a+U[it])return{it,start:a};a+=U[it];}return{it:cur.items[cur.items.length-1],start:a};}
-function beatUI(){const on=markMode&&!checked;$('checkBeats').style.display=on?'':'none';$('clearBeats').style.display=on&&marks.size?'':'none';}
+function beatUI(){const on=markMode&&!checked;$('checkBeats').style.display='none';$('clearBeats').style.display=on&&marks.size?'':'none';
+$('next').textContent=on?'Check my beats':(n===TOTAL-1?'See my results':'Next measure');}
 $('clearBeats').onclick=()=>{marks=new Set();beatUI();draw(cur,answered);};
 $('staff').addEventListener('click',e=>{if(!markMode||checked)return;const sv=$('staff'),pt=sv.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;
 const p=pt.matrixTransform(sv.getScreenCTM().inverse());let k=Math.round((p.x-X0)/cur.px);k=Math.max(0,Math.min(cur.u-1,k));
@@ -204,6 +210,7 @@ if(missStreak>=2&&level>1){level--;missStreak=0;m+=`<div class="muted" style="ma
 log.push({items:cur.items,comp:cur.comp,ok});
 $('score').textContent=correct+' correct';$('fb').innerHTML=m;}
 $('checkBeats').onclick=()=>{if(!marks.size){$('beatMsg').innerHTML='<span class="wrong" style="font-size:13px">Tap the measure to place at least one beat first</span>';return;}
+
 checked=true;answered=true;beatUI();draw(cur,true);
 const want=wantBeats(),missed=want.filter(k=>!marks.has(k)),extra=[...marks].filter(k=>!want.includes(k));
 const ok=!missed.length&&!extra.length;
@@ -229,25 +236,25 @@ answered=false;checked=false;marks=new Set();cur=gen();cur.mode=n>0&&Math.random
 draw(cur,false);beatUI();
 $('beatMsg').innerHTML=markMode?'<span class="muted">Tap where each beat starts. Tap a line again to remove it.</span>':'';
 $('sub').textContent=markMode?'Place the beats.':'Give me the time signature.';
-$('qtext').textContent=markMode?`This measure is in ${cur.top}/${cur.bot}. Where do the beats start?`:"What's the time signature?";
+$('qtext').innerHTML=markMode?`This measure is in ${tsH(cur.top+'/'+cur.bot,'i')}. Where do the beats start?`:"What's the time signature?";
 $('choices').style.display=markMode?'none':'';
 $('qnum').textContent=`Question ${n+1} of ${TOTAL}`;$('lvl').textContent='Level '+level;$('fb').innerHTML='';
 const f=focusType();const shown=f&&(f==='comp'?cur.comp:f==='simp'?!cur.comp:cur.items.includes(f));
 $('focus').innerHTML=shown?`Practicing: <b>${NAME[f]}</b>`:'';
 const ch=$('choices');ch.innerHTML='';
-if(!markMode)choices(cur).forEach(c=>{const b=document.createElement('button');b.textContent=c;b.onclick=()=>pick(c,b);ch.appendChild(b);});
-$('next').textContent=n===TOTAL-1?'See my results':'Next measure';}
+if(!markMode)choices(cur).forEach(c=>{const b=document.createElement('button');b.innerHTML=tsH(c);b.dataset.v=c;b.onclick=()=>pick(c,b);ch.appendChild(b);});
+beatUI();}
 function pick(c,b){
 if(answered)return;answered=true;
 const ans=`${cur.top}/${cur.bot}`,ok=c===ans,[pt,pb]=c.split('/').map(Number);
 b.classList.add(ok?'ok':'bad');
-if(!ok)[...$('choices').children].forEach(x=>{if(x.textContent===ans)x.classList.add('ok')});
+if(!ok)[...$('choices').children].forEach(x=>{if(x.dataset.v===ans)x.classList.add('ok')});
 draw(cur,true);
 const topX=!ok&&pt!==cur.top,botX=!ok&&pb!==cur.bot,bd=breakdown(topX,botX);
 const concept=cur.comp?'comp':'simp',types=[...new Set(cur.items)].filter(k=>k!=='q');
 let m,culprit=null;
-if(ok)m=`<span class="good">Right, it's ${ans}.</span>${bd}`;
-else{m=`<span class="wrong">Not quite. You said ${c}, but it's ${ans}.</span>${bd}`;
+if(ok)m=`<span class="good">Right, it's ${tsH(ans,'i')}.</span>${bd}`;
+else{m=`<span class="wrong">Not quite. You said ${tsH(c,'i')}, but it's ${tsH(ans,'i')}.</span>${bd}`;
 if(pb!==cur.bot)culprit=concept;
 else{const diff=pt-cur.top,pri=diff>0?['s4','s6','es','se','e2','e3','r','dq','dh','h']:['r','dh','h','dq','e3','e2','s4','s6','es','se'];
 culprit=types.sort((a,b)=>(weak[b]||1)-(weak[a]||1)||pri.indexOf(a)-pri.indexOf(b))[0]||null;
@@ -264,7 +271,7 @@ else if(!ranked.length)h=`<p>You worked through your misses during the round. Pr
 else h=`<p>What to work on next:</p><ul>${ranked.map(k=>`<li><b>${NAME[k]}</b>: ${TIP[k]}</li>`).join('')}</ul><p class="muted">Tip: first decide the bottom number from how the notes are grouped, then count for the top.</p>`;
 $('sumBody').innerHTML=h;}
 function start(){n=0;level=1;streak=0;missStreak=0;correct=0;log=[];weak={};$('summary').style.display='none';$('game').style.display='';$('score').textContent='0 correct';render();}
-$('next').onclick=()=>{if(!answered){$('fb').innerHTML=`<span class="wrong" style="font-size:13px">${markMode?'Place your beats and tap Check my beats first':'Pick an answer first'}</span>`;return;}if(n<TOTAL-1){n++;render();}else finish();};
+$('next').onclick=()=>{if(markMode&&!checked){$('checkBeats').onclick();return;}if(!answered){$('fb').innerHTML=`<span class="wrong" style="font-size:13px">${markMode?'Place your beats and tap Check my beats first':'Pick an answer first'}</span>`;return;}if(n<TOTAL-1){n++;render();}else finish();};
 $('again').onclick=start;
 start();
 </script>
