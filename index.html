@@ -63,7 +63,7 @@ footer{font-size:12px;color:var(--muted);text-align:center;margin-top:24px}
 <body>
 <main>
 <h1>Time signature trainer</h1>
-<p class="sub">Give me the time signature, or show me where the beats are.</p>
+<p class="sub" id="sub">Give me the time signature.</p>
 
 <div class="card" id="game">
 <div class="top"><span id="qnum">Question 1 of 12</span><span class="pill" id="lvl">Level 1</span><span id="score">0 correct</span></div>
@@ -228,6 +228,7 @@ function render(){
 answered=false;checked=false;marks=new Set();cur=gen();cur.mode=n>0&&Math.random()<0.35?'beats':'sig';markMode=cur.mode==='beats';
 draw(cur,false);beatUI();
 $('beatMsg').innerHTML=markMode?'<span class="muted">Tap where each beat starts. Tap a line again to remove it.</span>':'';
+$('sub').textContent=markMode?'Place the beats.':'Give me the time signature.';
 $('qtext').textContent=markMode?`This measure is in ${cur.top}/${cur.bot}. Where do the beats start?`:"What's the time signature?";
 $('choices').style.display=markMode?'none':'';
 $('qnum').textContent=`Question ${n+1} of ${TOTAL}`;$('lvl').textContent='Level '+level;$('fb').innerHTML='';
